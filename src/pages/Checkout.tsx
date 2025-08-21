@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { getCartFromStorage, clearCart, type Cart } from '@/utils/cart';
 import { getProductById } from '@/data/products';
+import { supabase } from '@/integrations/supabase/client';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -96,7 +97,7 @@ const Checkout = () => {
       return;
     }
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.cardNumber) {
+    if (!formData.firstName || !formData.lastName || !formData.email) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
@@ -107,24 +108,52 @@ const Checkout = () => {
 
     setIsProcessing(true);
 
-    // Simulate payment processing (2-4 seconds)
-    const processingTime = Math.random() * 2000 + 2000;
-    
-    setTimeout(() => {
-      // Generate fake order number
-      const orderNumber = `EBC${Date.now().toString().slice(-6)}`;
-      
-      // Clear cart
+    try {
+      // Prepare cart items for Stripe
+      const stripeCartItems = cartItemsWithProducts.map(item => ({
+        name: item.product!.name,
+        price: item.product!.price,
+        quantity: item.cartItem.quantity,
+        description: item.product!.description || `High-quality ${item.product!.name.toLowerCase()}`
+      }));
+
+      console.log('Creating payment session with items:', stripeCartItems);
+
+      // Call Supabase edge function to create Stripe checkout session
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          cartItems: stripeCartItems,
+          customerEmail: formData.email
+        }
+      });
+
+      if (error) {
+        console.error('Payment creation error:', error);
+        throw new Error(error.message || 'Failed to create payment session');
+      }
+
+      if (!data?.url) {
+        throw new Error('No checkout URL received');
+      }
+
+      console.log('Payment session created, redirecting to:', data.url);
+
+      // Clear cart before redirecting to Stripe
       clearCart();
       
-      // Navigate to success page with order number
-      navigate(`/order-success?order=${orderNumber}`);
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+      
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      setIsProcessing(false);
       
       toast({
-        title: "Order successful!",
-        description: `Your order #${orderNumber} has been confirmed.`,
+        title: "Payment Error",
+        description: error.message || "Failed to process payment. Please try again.",
+        variant: "destructive"
       });
-    }, processingTime);
+    }
   };
 
   if (cart.items.length === 0) {
