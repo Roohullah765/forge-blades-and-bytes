@@ -14,13 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string
+          currency: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          items: Json
+          order_number: string
+          shipping: number | null
+          shipping_address: Json
+          status: string | null
+          stripe_session_id: string | null
+          subtotal: number
+          tax: number | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          items: Json
+          order_number: string
+          shipping?: number | null
+          shipping_address: Json
+          status?: string | null
+          stripe_session_id?: string | null
+          subtotal: number
+          tax?: number | null
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          items?: Json
+          order_number?: string
+          shipping?: number | null
+          shipping_address?: Json
+          status?: string | null
+          stripe_session_id?: string | null
+          subtotal?: number
+          tax?: number | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          featured: boolean | null
+          features: string[] | null
+          id: string
+          images: string[] | null
+          name: string
+          price: number
+          rating: number | null
+          review_count: number | null
+          specifications: Json | null
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          features?: string[] | null
+          id?: string
+          images?: string[] | null
+          name: string
+          price: number
+          rating?: number | null
+          review_count?: number | null
+          specifications?: Json | null
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          features?: string[] | null
+          id?: string
+          images?: string[] | null
+          name?: string
+          price?: number
+          rating?: number | null
+          review_count?: number | null
+          specifications?: Json | null
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
