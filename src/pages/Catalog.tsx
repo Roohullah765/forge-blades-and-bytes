@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { products, getAllCategories, getCategoryDisplayName, type Product } from '@/data/products';
+import ProductCard from '@/components/ProductCard';
 
 const Catalog = () => {
   const { category } = useParams<{ category?: string }>();
@@ -198,108 +199,11 @@ const Catalog = () => {
               : 'space-y-4'
             }>
               {filteredProducts.map((product, index) => (
-                <motion.div
+                <ProductCard
                   key={product.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  {viewMode === 'grid' ? (
-                    <Card className="group hover-lift hover:shadow-elegant overflow-hidden">
-                      <Link to={`/product/${product.id}`}>
-                        <div className="aspect-[4/3] bg-gradient-subtle relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
-                          <div className="absolute top-3 left-3">
-                            <Badge variant="outline" className="text-xs bg-background/80 backdrop-blur-sm">
-                              {getCategoryDisplayName(product.category)}
-                            </Badge>
-                          </div>
-                          {product.featured && (
-                            <div className="absolute top-3 right-3">
-                              <Badge className="bg-secondary text-secondary-foreground text-xs">
-                                Featured
-                              </Badge>
-                            </div>
-                          )}
-                          <div className="absolute bottom-3 left-3">
-                            <div className="flex items-center space-x-1 text-white/80 bg-black/30 backdrop-blur-sm rounded px-2 py-1">
-                              <Star className="w-3 h-3 fill-current" />
-                              <span className="text-xs font-medium">{product.rating}</span>
-                              <span className="text-xs">({product.reviewCount})</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <h3 className="font-display font-semibold text-lg mb-2 group-hover:text-primary transition-colors line-clamp-1">
-                            {product.name}
-                          </h3>
-                          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                            {product.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-lg text-primary">
-                              ${product.price}
-                            </span>
-                            <Button variant="ghost" size="sm" className="text-xs">
-                              View Details
-                            </Button>
-                          </div>
-                        </div>
-                      </Link>
-                    </Card>
-                  ) : (
-                    <Card className="group hover:shadow-steel overflow-hidden">
-                      <Link to={`/product/${product.id}`}>
-                        <div className="flex flex-col md:flex-row">
-                          <div className="w-full md:w-48 h-32 md:h-auto bg-gradient-subtle relative">
-                            <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
-                            {product.featured && (
-                              <div className="absolute top-2 right-2">
-                                <Badge className="bg-secondary text-secondary-foreground text-xs">
-                                  Featured
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 p-6">
-                            <div className="flex flex-col md:flex-row md:items-start justify-between space-y-4 md:space-y-0">
-                              <div className="flex-1">
-                                <div className="mb-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    {getCategoryDisplayName(product.category)}
-                                  </Badge>
-                                </div>
-                                <h3 className="font-display font-semibold text-xl mb-2 group-hover:text-primary transition-colors">
-                                  {product.name}
-                                </h3>
-                                <p className="text-muted-foreground mb-4 line-clamp-2">
-                                  {product.description}
-                                </p>
-                                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center space-x-1">
-                                    <Star className="w-4 h-4 fill-current text-primary" />
-                                    <span>{product.rating}</span>
-                                    <span>({product.reviewCount} reviews)</span>
-                                  </div>
-                                  <span>•</span>
-                                  <span>{product.specifications.bladeLength}</span>
-                                </div>
-                              </div>
-                              <div className="text-right space-y-3">
-                                <div className="font-bold text-2xl text-primary">
-                                  ${product.price}
-                                </div>
-                                <Button variant="outline" size="sm">
-                                  View Details
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    </Card>
-                  )}
-                </motion.div>
+                  product={product}
+                  index={index}
+                />
               ))}
             </div>
           )}

@@ -19,6 +19,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Policies from "./pages/Policies";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
 
 // Import layout components
 import Header from "./components/layout/Header";
@@ -69,6 +70,9 @@ const App = () => {
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/policies" element={<Policies />} />
+                
+                {/* Admin panel */}
+                <Route path="/admin" element={<Admin />} />
                 
                 {/* 404 catch-all route - MUST be last */}
                 <Route path="*" element={<NotFound />} />

@@ -50,7 +50,7 @@ serve(async (req) => {
 
     console.log('Created line items:', lineItems);
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with international support
     const session = await stripe.checkout.sessions.create({
       customer_email: customerEmail || 'guest@example.com',
       line_items: lineItems,
@@ -61,9 +61,26 @@ serve(async (req) => {
         enabled: true,
       },
       shipping_address_collection: {
-        allowed_countries: ['US', 'CA'],
+        allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'CH', 'SE', 'NO', 'DK', 'FI', 'IE', 'PT', 'LU', 'PL', 'CZ', 'HU', 'SK', 'SI', 'EE', 'LV', 'LT', 'MT', 'CY', 'BG', 'RO', 'HR', 'GR', 'JP', 'SG', 'HK', 'NZ', 'MX', 'BR', 'AR', 'CL', 'CO', 'PE', 'UY', 'IN', 'MY', 'TH', 'ID', 'PH', 'VN', 'AE', 'SA', 'IL', 'ZA', 'EG', 'MA', 'TN', 'KE', 'NG', 'GH', 'ZM', 'UG', 'TZ', 'RW', 'SN', 'CI', 'PK', 'BD', 'LK', 'NP', 'KH', 'LA', 'MM', 'KR', 'TW'],
       },
       billing_address_collection: 'required',
+      currency_options: {
+        usd: {}, // Default USD
+        eur: {}, // Euro for Europe
+        gbp: {}, // British Pound
+        aud: {}, // Australian Dollar
+        cad: {}, // Canadian Dollar
+        jpy: {}, // Japanese Yen
+        sgd: {}, // Singapore Dollar
+        hkd: {}, // Hong Kong Dollar
+        inr: {}, // Indian Rupee
+        pkr: {}, // Pakistani Rupee
+        aed: {}, // UAE Dirham
+        sar: {}, // Saudi Riyal
+        zar: {}, // South African Rand
+        brl: {}, // Brazilian Real
+        mxn: {}, // Mexican Peso
+      },
     });
 
     console.log('Created checkout session:', session.id);

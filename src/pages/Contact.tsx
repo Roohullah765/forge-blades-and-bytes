@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from 'lucide-react';
+import LahorerMap from '@/components/LahorerMap';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,19 +68,19 @@ const Contact = () => {
       title: 'Visit Our Workshop',
       details: [
         'Elite Blade Co. Workshop',
-        '42 Cutlers Hall Road',
-        'Sheffield, S1 2HH',
-        'United Kingdom'
+        '42 Liberty Market Road',
+        'Gulberg III, Lahore',
+        'Punjab, Pakistan'
       ]
     },
     {
       icon: Phone,
       title: 'Call Us',
       details: [
-        '+44 114 123 4567',
-        '1-800-KNIVES-1 (US)',
-        'Monday - Friday: 9am - 6pm GMT',
-        'Saturday: 10am - 4pm GMT'
+        '+92 42 123 4567',
+        '+1-800-KNIVES-1 (US/Int\'l)',
+        'Monday - Friday: 9am - 6pm PKT',
+        'Saturday: 10am - 4pm PKT'
       ]
     },
     {
@@ -319,7 +320,7 @@ const Contact = () => {
           </div>
         </motion.div>
 
-        {/* Map Placeholder */}
+        {/* Interactive Map */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -328,20 +329,10 @@ const Contact = () => {
         >
           <Card className="p-8">
             <h3 className="font-display font-semibold text-2xl mb-6 text-center">
-              Find Our Workshop
+              Find Our Workshop in Lahore
             </h3>
-            <div className="aspect-video bg-gradient-subtle rounded-lg overflow-hidden">
-              <div className="w-full h-full bg-gradient-primary opacity-10 flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="w-12 h-12 text-primary/40 mx-auto mb-4" />
-                  <p className="text-lg font-display font-semibold text-primary/60">
-                    Sheffield, England
-                  </p>
-                  <p className="text-muted-foreground">
-                    Interactive map coming soon
-                  </p>
-                </div>
-              </div>
+            <div className="aspect-video rounded-lg overflow-hidden">
+              <LahorerMap />
             </div>
           </Card>
         </motion.div>

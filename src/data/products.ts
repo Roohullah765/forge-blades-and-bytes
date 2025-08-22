@@ -46,7 +46,7 @@ export const products: Product[] = [
       'Brass bolster for balance',
       'Corrosion resistant'
     ],
-    images: ['/images/chef-damascus-1.jpg', '/images/chef-damascus-2.jpg'],
+    images: ['/src/assets/chef-damascus.jpg'],
     rating: 4.9,
     reviewCount: 234,
     inStock: true,
@@ -73,7 +73,7 @@ export const products: Product[] = [
       'Dishwasher safe',
       'Lifetime warranty'
     ],
-    images: ['/images/chef-german-1.jpg', '/images/chef-german-2.jpg'],
+    images: ['/src/assets/chef-german.jpg'],
     rating: 4.7,
     reviewCount: 189,
     inStock: true
@@ -128,7 +128,7 @@ export const products: Product[] = [
       'Easy to sharpen',
       'Lightweight design'
     ],
-    images: ['/images/paring-1.jpg', '/images/paring-2.jpg'],
+    images: ['/src/assets/paring-precision.jpg'],
     rating: 4.6,
     reviewCount: 78,
     inStock: true
@@ -182,7 +182,7 @@ export const products: Product[] = [
       'Non-slip handle',
       'Versatile cutting'
     ],
-    images: ['/images/santoku-1.jpg', '/images/santoku-2.jpg'],
+    images: ['/src/assets/santoku-hollowed.jpg'],
     rating: 4.8,
     reviewCount: 143,
     inStock: true,
@@ -237,7 +237,7 @@ export const products: Product[] = [
       'Thick blade spine',
       'Easy to clean'
     ],
-    images: ['/images/cleaver-1.jpg', '/images/cleaver-2.jpg'],
+    images: ['/src/assets/cleaver-heavy.jpg'],
     rating: 4.4,
     reviewCount: 56,
     inStock: true
@@ -291,7 +291,7 @@ export const products: Product[] = [
       'Thumb studs',
       'Glass breaker tip'
     ],
-    images: ['/images/pocket-tactical-1.jpg', '/images/pocket-tactical-2.jpg'],
+    images: ['/src/assets/pocket-tactical.jpg'],
     rating: 4.8,
     reviewCount: 198,
     inStock: true,
@@ -398,7 +398,7 @@ export const products: Product[] = [
       'Hand forged',
       'Custom leather sheath'
     ],
-    images: ['/images/hunting-drop-1.jpg', '/images/hunting-drop-2.jpg'],
+    images: ['/src/assets/hunting-drop.jpg'],
     rating: 4.8,
     reviewCount: 76,
     inStock: true,
@@ -453,7 +453,7 @@ export const products: Product[] = [
       'Kydex sheath',
       'Paracord lanyard'
     ],
-    images: ['/images/fixed-bushcraft-1.jpg', '/images/fixed-bushcraft-2.jpg'],
+    images: ['/src/assets/fixed-bushcraft.jpg'],
     rating: 4.9,
     reviewCount: 167,
     inStock: true,
