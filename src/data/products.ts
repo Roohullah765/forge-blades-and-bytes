@@ -49,7 +49,7 @@ export const products: Product[] = [
     images: ['/src/assets/chef-damascus.jpg'],
     rating: 4.9,
     reviewCount: 234,
-    inStock: true,
+    stock: 15,
     featured: true
   },
   {
@@ -76,7 +76,7 @@ export const products: Product[] = [
     images: ['/src/assets/chef-german.jpg'],
     rating: 4.7,
     reviewCount: 189,
-    inStock: true
+    stock: 8
   },
   {
     id: 'chef-003',
@@ -102,7 +102,7 @@ export const products: Product[] = [
     images: ['/images/chef-gyuto-1.jpg', '/images/chef-gyuto-2.jpg'],
     rating: 4.8,
     reviewCount: 156,
-    inStock: true,
+    stock: 12,
     featured: true
   },
 
@@ -131,7 +131,7 @@ export const products: Product[] = [
     images: ['/src/assets/paring-precision.jpg'],
     rating: 4.6,
     reviewCount: 78,
-    inStock: true
+    stock: 20
   },
   {
     id: 'paring-002',
@@ -157,7 +157,7 @@ export const products: Product[] = [
     images: ['/images/paring-set-1.jpg', '/images/paring-set-2.jpg'],
     rating: 4.5,
     reviewCount: 92,
-    inStock: true
+    stock: 6
   },
 
   // Santoku Knives
@@ -185,7 +185,7 @@ export const products: Product[] = [
     images: ['/src/assets/santoku-hollowed.jpg'],
     rating: 4.8,
     reviewCount: 143,
-    inStock: true,
+    stock: 10,
     featured: true
   },
   {
@@ -212,7 +212,7 @@ export const products: Product[] = [
     images: ['/images/santoku-traditional-1.jpg', '/images/santoku-traditional-2.jpg'],
     rating: 4.6,
     reviewCount: 87,
-    inStock: true
+    stock: 14
   },
 
   // Cleaver Knives
@@ -240,7 +240,7 @@ export const products: Product[] = [
     images: ['/src/assets/cleaver-heavy.jpg'],
     rating: 4.4,
     reviewCount: 56,
-    inStock: true
+    stock: 7
   },
   {
     id: 'cleaver-002',
@@ -266,7 +266,7 @@ export const products: Product[] = [
     images: ['/images/cleaver-chinese-1.jpg', '/images/cleaver-chinese-2.jpg'],
     rating: 4.7,
     reviewCount: 73,
-    inStock: true
+    stock: 9
   },
 
   // Pocket/Folding Knives
@@ -294,7 +294,7 @@ export const products: Product[] = [
     images: ['/src/assets/pocket-tactical.jpg'],
     rating: 4.8,
     reviewCount: 198,
-    inStock: true,
+    stock: 18,
     featured: true
   },
   {
@@ -321,7 +321,7 @@ export const products: Product[] = [
     images: ['/images/pocket-gentleman-1.jpg', '/images/pocket-gentleman-2.jpg'],
     rating: 4.5,
     reviewCount: 67,
-    inStock: true
+    stock: 11
   },
   {
     id: 'pocket-003',
@@ -347,7 +347,7 @@ export const products: Product[] = [
     images: ['/images/pocket-multi-1.jpg', '/images/pocket-multi-2.jpg'],
     rating: 4.6,
     reviewCount: 134,
-    inStock: true
+    stock: 22
   },
 
   // Hunting Knives
@@ -375,7 +375,7 @@ export const products: Product[] = [
     images: ['/images/hunting-skinning-1.jpg', '/images/hunting-skinning-2.jpg'],
     rating: 4.7,
     reviewCount: 89,
-    inStock: true
+    stock: 5
   },
   {
     id: 'hunting-002',
@@ -401,7 +401,7 @@ export const products: Product[] = [
     images: ['/src/assets/hunting-drop.jpg'],
     rating: 4.8,
     reviewCount: 76,
-    inStock: true,
+    stock: 13,
     featured: true
   },
   {
@@ -428,7 +428,7 @@ export const products: Product[] = [
     images: ['/images/hunting-gut-1.jpg', '/images/hunting-gut-2.jpg'],
     rating: 4.4,
     reviewCount: 52,
-    inStock: true
+    stock: 8
   },
 
   // Fixed Blade Knives
@@ -456,7 +456,7 @@ export const products: Product[] = [
     images: ['/src/assets/fixed-bushcraft.jpg'],
     rating: 4.9,
     reviewCount: 167,
-    inStock: true,
+    stock: 16,
     featured: true
   },
   {
@@ -483,7 +483,7 @@ export const products: Product[] = [
     images: ['/images/fixed-tactical-1.jpg', '/images/fixed-tactical-2.jpg'],
     rating: 4.6,
     reviewCount: 94,
-    inStock: true
+    stock: 4
   },
   {
     id: 'fixed-003',
@@ -509,7 +509,7 @@ export const products: Product[] = [
     images: ['/images/fixed-bowie-1.jpg', '/images/fixed-bowie-2.jpg'],
     rating: 4.7,
     reviewCount: 78,
-    inStock: true
+    stock: 19
   },
   {
     id: 'fixed-004',
@@ -535,7 +535,7 @@ export const products: Product[] = [
     images: ['/images/fixed-fillet-1.jpg', '/images/fixed-fillet-2.jpg'],
     rating: 4.3,
     reviewCount: 41,
-    inStock: true
+    stock: 12
   },
   {
     id: 'fixed-005',
@@ -561,7 +561,7 @@ export const products: Product[] = [
     images: ['/images/fixed-utility-1.jpg', '/images/fixed-utility-2.jpg'],
     rating: 4.1,
     reviewCount: 28,
-    inStock: true
+    stock: 25
   }
 ];
 

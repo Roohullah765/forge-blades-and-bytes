@@ -11,6 +11,16 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+// Delete default icon
+delete (Icon.Default.prototype as any)._getIconUrl;
+
+// Set default icon options
+Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
 // Custom marker icon
 const customIcon = new Icon({
   iconUrl: markerIcon,
@@ -53,6 +63,7 @@ const LahorerMap = () => {
         zoom={12}
         className="w-full h-full rounded-lg"
         scrollWheelZoom={false}
+        style={{ height: '400px', width: '100%' }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

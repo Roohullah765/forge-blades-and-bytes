@@ -172,9 +172,9 @@ const ProductDetail = () => {
 
             {/* Stock Status */}
             <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className={product.inStock ? 'text-green-600' : 'text-red-600'}>
-                {product.inStock ? 'In Stock' : 'Out of Stock'}
+              <div className={`w-3 h-3 rounded-full ${product.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className={product.stock > 0 ? 'text-green-600' : 'text-red-600'}>
+                {product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}
               </span>
             </div>
 
@@ -206,7 +206,7 @@ const ProductDetail = () => {
               <div className="flex space-x-3">
                 <Button 
                   onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  disabled={product.stock === 0}
                   size="lg"
                   className="flex-1 bg-primary hover:bg-primary-glow"
                 >

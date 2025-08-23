@@ -19,7 +19,8 @@ import {
   DollarSign,
   Users,
   Star,
-  AlertCircle
+  AlertCircle,
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+import AdminAuth from '@/components/AdminAuth';
 
 interface Product {
   id: string;
@@ -64,6 +67,8 @@ interface Order {
 }
 
 const Admin = () => {
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -93,11 +98,55 @@ const Admin = () => {
   const categories = ['chef', 'paring', 'santoku', 'cleaver', 'pocket', 'hunting', 'fixed-blade'];
   const orderStatuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'];
 
-  // Load data
+  // Set up real-time subscriptions
   useEffect(() => {
-    loadProducts();
-    loadOrders();
-  }, []);
+    if (!isAuthenticated) return;
+
+    const productsChannel = supabase
+      .channel('products_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'products' }, 
+        () => {
+          loadProducts();
+        }
+      )
+      .subscribe();
+
+    const ordersChannel = supabase
+      .channel('orders_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'orders' }, 
+        () => {
+          loadOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(productsChannel);
+      supabase.removeChannel(ordersChannel);
+    };
+  }, [isAuthenticated]);
+
+  // Load data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadProducts();
+      loadOrders();
+    }
+  }, [isAuthenticated]);
+
+  const handleAuthenticated = (authenticatedUser: SupabaseUser) => {
+    setUser(authenticatedUser);
+    setIsAuthenticated(true);
+    setIsLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setIsAuthenticated(false);
+  };
 
   const loadProducts = async () => {
     try {
@@ -174,6 +223,8 @@ const Admin = () => {
   };
 
   const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
     try {
       const { error } = await supabase
         .from('products')
@@ -241,7 +292,7 @@ const Admin = () => {
       stock: product.stock,
       featured: product.featured,
       features: product.features.length ? product.features : [''],
-      specifications: productForm.specifications || {
+      specifications: product.specifications || {
         bladeLength: '',
         totalLength: '',
         bladeMaterial: '',
@@ -286,6 +337,11 @@ const Admin = () => {
     }));
   };
 
+  // Show authentication screen if not authenticated
+  if (!isAuthenticated) {
+    return <AdminAuth onAuthenticated={handleAuthenticated} />;
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -304,14 +360,25 @@ const Admin = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex justify-between items-center"
         >
-          <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your knife store inventory and orders
-          </p>
+          <div>
+            <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              Manage your knife store inventory and orders
+            </p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-muted-foreground">
+              Welcome, {user?.email}
+            </span>
+            <Button variant="outline" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </motion.div>
 
         {/* Stats Cards */}
