@@ -87,7 +87,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                   Featured
                 </Badge>
               )}
-              {!product.inStock && (
+              {product.stock === 0 && (
                 <Badge variant="destructive">
                   Out of Stock
                 </Badge>
@@ -102,7 +102,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                   variant="secondary"
                   className="opacity-90 hover:opacity-100"
                   onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  disabled={product.stock === 0}
                 >
                   <ShoppingCart className="w-4 h-4 mr-1" />
                   Add to Cart
@@ -149,7 +149,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">
-                  {product.inStock ? 'In stock' : 'Out of stock'}
+                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                 </div>
                 {product.specifications?.bladeLength && (
                   <div className="text-xs text-muted-foreground">

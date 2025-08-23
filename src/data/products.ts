@@ -19,7 +19,7 @@ export interface Product {
   images: string[];
   rating: number;
   reviewCount: number;
-  inStock: boolean;
+  stock: number;
   featured?: boolean;
 }
 
