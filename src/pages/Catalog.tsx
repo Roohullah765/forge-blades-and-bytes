@@ -10,11 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { products, getAllCategories, getCategoryDisplayName, type Product } from '@/data/products';
+import { useProducts, getAllCategories, getCategoryDisplayName, type Product } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 
 const Catalog = () => {
   const { category } = useParams<{ category?: string }>();
+  const { products, loading } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'price-low' | 'price-high' | 'rating'>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -57,14 +58,24 @@ const Catalog = () => {
     return filtered;
   }, [category, searchTerm, sortBy]);
 
-  // Get page title based on category
   const pageTitle = category 
-    ? `${getCategoryDisplayName(category as Product['category'])}` 
+    ? `${getCategoryDisplayName(category)}` 
     : 'All Knives';
 
   const pageDescription = category
-    ? `Browse our premium ${getCategoryDisplayName(category as Product['category']).toLowerCase()} collection`
+    ? `Browse our premium ${getCategoryDisplayName(category).toLowerCase()} collection`
     : 'Explore our complete collection of premium knives';
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">

@@ -11,16 +11,17 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { getProductById, getCategoryDisplayName } from '@/data/products';
+import { useProducts, getProductById, getCategoryDisplayName } from '@/hooks/useProducts';
 import { addToCart } from '@/utils/cart';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { products } = useProducts();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
   // Find the product
-  const product = id ? getProductById(id) : null;
+  const product = id ? getProductById(products, id) : null;
 
   if (!product) {
     return (
@@ -156,7 +157,7 @@ const ProductDetail = () => {
                   ))}
                   <span className="text-lg font-semibold ml-2">{product.rating}</span>
                 </div>
-                <span className="text-muted-foreground">({product.reviewCount} reviews)</span>
+                <span className="text-muted-foreground">({product.review_count} reviews)</span>
               </div>
             </div>
 
@@ -278,7 +279,7 @@ const ProductDetail = () => {
                       <span className="font-medium capitalize">
                         {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                       </span>
-                      <span className="text-muted-foreground">{value}</span>
+                      <span className="text-muted-foreground">{String(value)}</span>
                     </div>
                   ))}
                 </div>
@@ -312,7 +313,7 @@ const ProductDetail = () => {
                 <h3 className="font-display font-semibold text-xl mb-6">Customer Reviews</h3>
                 <div className="text-center py-8 text-muted-foreground">
                   <p>Reviews feature coming soon...</p>
-                  <p className="text-sm mt-2">Currently showing {product.reviewCount} reviews with average rating of {product.rating}/5</p>
+                  <p className="text-sm mt-2">Currently showing {product.review_count} reviews with average rating of {product.rating}/5</p>
                 </div>
               </Card>
             </TabsContent>

@@ -1,175 +1,56 @@
-// Professional Admin Panel for Knife Store Management
-// Complete CRUD operations for products, orders, and analytics
-
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Package, 
-  ShoppingCart, 
-  TrendingUp, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Search, 
-  Filter,
-  Upload,
-  Save,
-  X,
-  Eye,
-  DollarSign,
-  Users,
-  Star,
-  AlertCircle,
-  LogOut
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { User as SupabaseUser } from '@supabase/supabase-js';
+import { useProducts, Product } from '@/hooks/useProducts';
+import { ProductForm } from '@/components/admin/ProductForm';
 import AdminAuth from '@/components/AdminAuth';
 
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  description?: string;
-  specifications: any;
-  features: string[];
-  images: string[];
-  rating: number;
-  review_count: number;
-  stock: number;
-  featured: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-interface Order {
-  id: string;
-  order_number: string;
-  customer_name: string;
-  customer_email: string;
-  total: number;
-  currency: string;
-  status: string;
-  created_at: string;
-}
-
 const Admin = () => {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState('products');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { products, loading, refetch } = useProducts();
+  const [user, setUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState({
-    name: '',
-    category: 'chef',
-    price: 0,
-    description: '',
-    stock: 0,
-    featured: false,
-    features: [''],
-    specifications: {
-      bladeLength: '',
-      totalLength: '',
-      bladeMaterial: '',
-      handleMaterial: '',
-      weight: '',
-      origin: ''
-    }
-  });
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
-  const categories = ['chef', 'paring', 'santoku', 'cleaver', 'pocket', 'hunting', 'fixed-blade'];
-  const orderStatuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'];
-
-  // Set up real-time subscriptions
+  // Check authentication
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const productsChannel = supabase
-      .channel('products_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'products' }, 
-        () => {
-          loadProducts();
-        }
-      )
-      .subscribe();
-
-    const ordersChannel = supabase
-      .channel('orders_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'orders' }, 
-        () => {
-          loadOrders();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(productsChannel);
-      supabase.removeChannel(ordersChannel);
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+      }
     };
-  }, [isAuthenticated]);
+    getSession();
 
-  // Load data when authenticated
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch orders
   useEffect(() => {
-    if (isAuthenticated) {
-      loadProducts();
-      loadOrders();
+    if (user) {
+      fetchOrders();
     }
-  }, [isAuthenticated]);
+  }, [user]);
 
-  const handleAuthenticated = (authenticatedUser: SupabaseUser) => {
-    setUser(authenticatedUser);
-    setIsAuthenticated(true);
-    setIsLoading(false);
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsAuthenticated(false);
-  };
-
-  const loadProducts = async () => {
+  const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error loading products",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadOrders = async () => {
-    try {
+      setLoadingOrders(true);
       const { data, error } = await supabase
         .from('orders')
         .select('*')
@@ -177,176 +58,66 @@ const Admin = () => {
 
       if (error) throw error;
       setOrders(data || []);
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error fetching orders:', error);
       toast({
         title: "Error loading orders",
-        description: error.message,
-        variant: "destructive"
+        description: "There was a problem loading the orders.",
+        variant: "destructive",
       });
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
-  const handleSaveProduct = async () => {
-    try {
-      const productData = {
-        ...productForm,
-        features: productForm.features.filter(f => f.trim()),
-        specifications: productForm.specifications
-      };
-
-      if (editingProduct) {
-        const { error } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', editingProduct.id);
-        if (error) throw error;
-        toast({ title: "Product updated successfully" });
-      } else {
-        const { error } = await supabase
-          .from('products')
-          .insert([productData]);
-        if (error) throw error;
-        toast({ title: "Product created successfully" });
-      }
-
-      setIsProductModalOpen(false);
-      setEditingProduct(null);
-      resetProductForm();
-      loadProducts();
-    } catch (error: any) {
-      toast({
-        title: "Error saving product",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
-    
+
     try {
       const { error } = await supabase
         .from('products')
         .delete()
-        .eq('id', productId);
+        .eq('id', id);
 
       if (error) throw error;
-      toast({ title: "Product deleted successfully" });
-      loadProducts();
-    } catch (error: any) {
+
       toast({
-        title: "Error deleting product",
-        description: error.message,
-        variant: "destructive"
+        title: "Product deleted",
+        description: "The product has been deleted successfully.",
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete the product.",
+        variant: "destructive",
       });
     }
-  };
-
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
-
-      if (error) throw error;
-      toast({ title: "Order status updated" });
-      loadOrders();
-    } catch (error: any) {
-      toast({
-        title: "Error updating order",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const resetProductForm = () => {
-    setProductForm({
-      name: '',
-      category: 'chef',
-      price: 0,
-      description: '',
-      stock: 0,
-      featured: false,
-      features: [''],
-      specifications: {
-        bladeLength: '',
-        totalLength: '',
-        bladeMaterial: '',
-        handleMaterial: '',
-        weight: '',
-        origin: ''
-      }
-    });
-  };
-
-  const openEditModal = (product: Product) => {
-    setEditingProduct(product);
-    setProductForm({
-      name: product.name,
-      category: product.category,
-      price: product.price,
-      description: product.description || '',
-      stock: product.stock,
-      featured: product.featured,
-      features: product.features.length ? product.features : [''],
-      specifications: product.specifications || {
-        bladeLength: '',
-        totalLength: '',
-        bladeMaterial: '',
-        handleMaterial: '',
-        weight: '',
-        origin: ''
-      }
-    });
-    setIsProductModalOpen(true);
   };
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !selectedCategory || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // Calculate stats
-  const totalProducts = products.length;
-  const totalOrders = orders.length;
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const lowStockProducts = products.filter(p => p.stock < 10).length;
-
-  const addFeature = () => {
-    setProductForm(prev => ({
-      ...prev,
-      features: [...prev.features, '']
-    }));
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
   };
 
-  const updateFeature = (index: number, value: string) => {
-    setProductForm(prev => ({
-      ...prev,
-      features: prev.features.map((f, i) => i === index ? value : f)
-    }));
-  };
-
-  const removeFeature = (index: number) => {
-    setProductForm(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index)
-    }));
-  };
-
-  // Show authentication screen if not authenticated
-  if (!isAuthenticated) {
-    return <AdminAuth onAuthenticated={handleAuthenticated} />;
+  if (!user) {
+    return <AdminAuth onAuthenticated={setUser} />;
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="text-muted-foreground">Loading admin panel...</p>
         </div>
       </div>
@@ -354,370 +125,143 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/20 py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex justify-between items-center"
-        >
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-muted-foreground">
-              Manage your knife store inventory and orders
-            </p>
+            <h1 className="font-display text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage your knife store</p>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user?.email}
-            </span>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </motion.div>
+          <Button onClick={handleSignOut} variant="outline">
+            Sign Out
+          </Button>
+        </div>
 
         {/* Stats Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Products</p>
-                <p className="text-3xl font-bold text-primary">{totalProducts}</p>
-              </div>
-              <Package className="w-8 h-8 text-primary/60" />
-            </div>
+            <div className="text-2xl font-bold text-primary">{products.length}</div>
+            <div className="text-sm text-muted-foreground">Total Products</div>
           </Card>
-          
           <Card className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Orders</p>
-                <p className="text-3xl font-bold text-secondary">{totalOrders}</p>
-              </div>
-              <ShoppingCart className="w-8 h-8 text-secondary/60" />
-            </div>
+            <div className="text-2xl font-bold text-primary">{orders.length}</div>
+            <div className="text-sm text-muted-foreground">Total Orders</div>
           </Card>
-          
           <Card className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Revenue</p>
-                <p className="text-3xl font-bold text-accent">${totalRevenue.toFixed(2)}</p>
-              </div>
-              <DollarSign className="w-8 h-8 text-accent/60" />
+            <div className="text-2xl font-bold text-primary">
+              ${orders.reduce((sum, order) => sum + (order.total || 0), 0).toFixed(2)}
             </div>
+            <div className="text-sm text-muted-foreground">Total Revenue</div>
           </Card>
-          
           <Card className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Low Stock</p>
-                <p className="text-3xl font-bold text-destructive">{lowStockProducts}</p>
-              </div>
-              <AlertCircle className="w-8 h-8 text-destructive/60" />
+            <div className="text-2xl font-bold text-orange-500">
+              {products.filter(p => p.stock < 5).length}
             </div>
+            <div className="text-sm text-muted-foreground">Low Stock Items</div>
           </Card>
-        </motion.div>
+        </div>
 
-        {/* Main Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="products">Products</TabsTrigger>
-                <TabsTrigger value="orders">Orders</TabsTrigger>
-              </TabsList>
+        {/* Tabs */}
+        <Tabs defaultValue="products" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="orders">Orders</TabsTrigger>
+          </TabsList>
 
-              <TabsContent value="products" className="space-y-6">
-                {/* Products Controls */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search products..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64"
-                      />
-                    </div>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map(cat => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => { resetProductForm(); setEditingProduct(null); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Product
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>
-                          {editingProduct ? 'Edit Product' : 'Add New Product'}
-                        </DialogTitle>
-                      </DialogHeader>
-                      
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label>Product Name *</Label>
-                            <Input
-                              value={productForm.name}
-                              onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                              placeholder="Enter product name"
-                            />
-                          </div>
-                          <div>
-                            <Label>Category *</Label>
-                            <Select
-                              value={productForm.category}
-                              onValueChange={(value) => setProductForm(prev => ({ ...prev, category: value }))}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {categories.map(cat => (
-                                  <SelectItem key={cat} value={cat}>
-                                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label>Price (USD) *</Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={productForm.price}
-                              onChange={(e) => setProductForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                              placeholder="0.00"
-                            />
-                          </div>
-                          <div>
-                            <Label>Stock *</Label>
-                            <Input
-                              type="number"
-                              value={productForm.stock}
-                              onChange={(e) => setProductForm(prev => ({ ...prev, stock: parseInt(e.target.value) || 0 }))}
-                              placeholder="0"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label>Description</Label>
-                          <Textarea
-                            value={productForm.description}
-                            onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="Product description..."
-                            rows={3}
-                          />
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={productForm.featured}
-                            onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, featured: checked }))}
-                          />
-                          <Label>Featured Product</Label>
-                        </div>
-
-                        <Separator />
-
-                        {/* Specifications */}
-                        <div>
-                          <Label className="text-lg">Specifications</Label>
-                          <div className="grid grid-cols-2 gap-4 mt-2">
-                            <div>
-                              <Label>Blade Length</Label>
-                              <Input
-                                value={productForm.specifications.bladeLength}
-                                onChange={(e) => setProductForm(prev => ({
-                                  ...prev,
-                                  specifications: { ...prev.specifications, bladeLength: e.target.value }
-                                }))}
-                                placeholder="e.g., 8 inches (20cm)"
-                              />
-                            </div>
-                            <div>
-                              <Label>Total Length</Label>
-                              <Input
-                                value={productForm.specifications.totalLength}
-                                onChange={(e) => setProductForm(prev => ({
-                                  ...prev,
-                                  specifications: { ...prev.specifications, totalLength: e.target.value }
-                                }))}
-                                placeholder="e.g., 13 inches (33cm)"
-                              />
-                            </div>
-                            <div>
-                              <Label>Blade Material</Label>
-                              <Input
-                                value={productForm.specifications.bladeMaterial}
-                                onChange={(e) => setProductForm(prev => ({
-                                  ...prev,
-                                  specifications: { ...prev.specifications, bladeMaterial: e.target.value }
-                                }))}
-                                placeholder="e.g., Damascus Steel"
-                              />
-                            </div>
-                            <div>
-                              <Label>Handle Material</Label>
-                              <Input
-                                value={productForm.specifications.handleMaterial}
-                                onChange={(e) => setProductForm(prev => ({
-                                  ...prev,
-                                  specifications: { ...prev.specifications, handleMaterial: e.target.value }
-                                }))}
-                                placeholder="e.g., Ebony Wood"
-                              />
-                            </div>
-                            <div>
-                              <Label>Weight</Label>
-                              <Input
-                                value={productForm.specifications.weight}
-                                onChange={(e) => setProductForm(prev => ({
-                                  ...prev,
-                                  specifications: { ...prev.specifications, weight: e.target.value }
-                                }))}
-                                placeholder="e.g., 7.2 oz (204g)"
-                              />
-                            </div>
-                            <div>
-                              <Label>Origin</Label>
-                              <Input
-                                value={productForm.specifications.origin}
-                                onChange={(e) => setProductForm(prev => ({
-                                  ...prev,
-                                  specifications: { ...prev.specifications, origin: e.target.value }
-                                }))}
-                                placeholder="e.g., Japan"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Features */}
-                        <div>
-                          <Label className="text-lg">Features</Label>
-                          <div className="space-y-2 mt-2">
-                            {productForm.features.map((feature, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <Input
-                                  value={feature}
-                                  onChange={(e) => updateFeature(index, e.target.value)}
-                                  placeholder="Enter feature"
-                                />
-                                {productForm.features.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => removeFeature(index)}
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={addFeature}
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Add Feature
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-2 pt-4">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setIsProductModalOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button onClick={handleSaveProduct}>
-                            <Save className="w-4 h-4 mr-2" />
-                            {editingProduct ? 'Update' : 'Create'} Product
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+          <TabsContent value="products" className="space-y-6">
+            {/* Filters and Actions */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <div className="flex flex-1 gap-4">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="chef">Chef Knives</SelectItem>
+                    <SelectItem value="paring">Paring Knives</SelectItem>
+                    <SelectItem value="santoku">Santoku Knives</SelectItem>
+                    <SelectItem value="cleaver">Cleaver Knives</SelectItem>
+                    <SelectItem value="pocket">Pocket Knives</SelectItem>
+                    <SelectItem value="hunting">Hunting Knives</SelectItem>
+                    <SelectItem value="fixed-blade">Fixed Blade Knives</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button 
+                onClick={() => {
+                  setEditingProduct(null);
+                  setIsProductModalOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Product
+              </Button>
+            </div>
 
-                {/* Products Table */}
-                <div className="space-y-4">
-                  {filteredProducts.map((product) => (
-                    <Card key={product.id} className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
-                            <Package className="w-6 h-6 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{product.name}</h3>
-                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                              <Badge variant="outline">
-                                {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
-                              </Badge>
-                              <span>${product.price}</span>
-                              <span>•</span>
-                              <span>Stock: {product.stock}</span>
-                              {product.featured && (
-                                <>
-                                  <span>•</span>
-                                  <Badge variant="default">Featured</Badge>
-                                </>
-                              )}
-                            </div>
+            {/* Products Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="aspect-[4/3] bg-gradient-subtle relative">
+                      {product.featured && (
+                        <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
+                          Featured
+                        </Badge>
+                      )}
+                      {product.stock === 0 && (
+                        <Badge variant="destructive" className="absolute top-2 right-2">
+                          Out of Stock
+                        </Badge>
+                      )}
+                      {product.images && product.images.length > 0 ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-primary opacity-10 flex items-center justify-center">
+                          <div className="text-4xl font-display font-bold text-primary/30">
+                            {product.name.charAt(0)}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline" className="capitalize">
+                          {product.category.replace('-', ' ')}
+                        </Badge>
+                        <div className="flex items-center space-x-1">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => openEditModal(product)}
+                            onClick={() => {
+                              setEditingProduct(product);
+                              setIsProductModalOpen(true);
+                            }}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteProduct(product.id)}
                           >
@@ -725,54 +269,86 @@ const Admin = () => {
                           </Button>
                         </div>
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="orders" className="space-y-6">
-                {/* Orders Table */}
-                <div className="space-y-4">
-                  {orders.map((order) => (
-                    <Card key={order.id} className="p-4">
+                      <h3 className="font-semibold mb-2 line-clamp-1">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold">{order.order_number}</h3>
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <span>{order.customer_name}</span>
-                            <span>•</span>
-                            <span>{order.customer_email}</span>
-                            <span>•</span>
-                            <span>${order.total} {order.currency}</span>
-                            <span>•</span>
-                            <span>{new Date(order.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Select
-                            value={order.status}
-                            onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {orderStatuses.map(status => (
-                                <SelectItem key={status} value={status}>
-                                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <span className="font-bold text-primary">${product.price}</span>
+                        <span className="text-sm text-muted-foreground">{product.stock} in stock</span>
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </Card>
-        </motion.div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No products found.</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-6">
+            {loadingOrders ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading orders...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <Card key={order.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{order.order_number}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {order.customer_name} • {order.customer_email}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-primary">${order.total}</div>
+                        <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
+                          {order.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                {orders.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No orders found.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Product Modal */}
+        <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              </DialogTitle>
+            </DialogHeader>
+            <ProductForm
+              product={editingProduct || undefined}
+              onSubmit={() => {
+                setIsProductModalOpen(false);
+                setEditingProduct(null);
+                refetch();
+              }}
+              onCancel={() => {
+                setIsProductModalOpen(false);
+                setEditingProduct(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

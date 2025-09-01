@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { Product } from '@/data/products';
+import { Product } from '@/hooks/useProducts';
 import { addToCart } from '@/utils/cart';
 import { toast } from '@/hooks/use-toast';
 
@@ -121,7 +121,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               <div className="flex items-center space-x-1 text-muted-foreground">
                 <Star className="w-4 h-4 fill-primary text-primary" />
                 <span className="font-medium">{product.rating}</span>
-                <span>({product.reviewCount})</span>
+                <span>({product.review_count})</span>
               </div>
             </div>
 
