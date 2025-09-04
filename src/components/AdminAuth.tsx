@@ -24,6 +24,9 @@ const AdminAuth = ({ onAuthenticated }: AdminAuthProps) => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
 
+  // Debug logging
+  console.log('AdminAuth component rendered:', { user, session });
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
