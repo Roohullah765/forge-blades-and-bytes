@@ -24,6 +24,8 @@ const Admin = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
+  console.log('Admin render - user:', user, 'loading:', loading, 'products count:', products.length);
+
   // Check authentication
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
