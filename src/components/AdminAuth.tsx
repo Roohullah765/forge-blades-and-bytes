@@ -54,9 +54,10 @@ const AdminAuth = ({ onAuthenticated }: AdminAuthProps) => {
         .from('admin_users')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        console.error('Database error checking admin status:', error);
         throw error;
       }
 
@@ -65,7 +66,7 @@ const AdminAuth = ({ onAuthenticated }: AdminAuthProps) => {
       } else {
         toast({
           title: "Access Denied",
-          description: "You don't have admin privileges.",
+          description: "You don't have admin privileges. Please contact support.",
           variant: "destructive"
         });
         await supabase.auth.signOut();
@@ -73,10 +74,11 @@ const AdminAuth = ({ onAuthenticated }: AdminAuthProps) => {
     } catch (error: any) {
       console.error('Error checking admin status:', error);
       toast({
-        title: "Error",
-        description: "Failed to verify admin status.",
+        title: "Authentication Error",
+        description: "Failed to verify admin status. Please try again.",
         variant: "destructive"
       });
+      await supabase.auth.signOut();
     }
   };
 
